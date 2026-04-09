@@ -6,6 +6,7 @@ on:
 jobs:
   build-android:
     runs-on: macos-14
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,11 +35,11 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug 2>&1 | tail -30
+          ./gradlew assembleDebug
+          ls -la app/build/outputs/apk/debug/
       
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: android-apk
+          name: moodbloom-android
           path: android/app/build/outputs/apk/debug/*.apk
-          if-no-files-found: error
