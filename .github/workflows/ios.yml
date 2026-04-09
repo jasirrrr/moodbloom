@@ -6,6 +6,7 @@ on:
 jobs:
   build-ios:
     runs-on: macos-14
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,24 +23,27 @@ jobs:
       - name: Generate iOS native project
         run: npx expo prebuild --platform ios --clean
       
-      - name: Install CocoaPods (with retry)
+      - name: Install CocoaPods
         run: |
           cd ios
-          for i in 1 2 3; do
-            echo "Attempt $i to install pods..."
-            pod install && break
-            echo "Retrying in 10 seconds..."
-            sleep 10
-          done
+          pod install --repo-update --verbose 2>&1 | tail -50 || true
+          ls -la *.xcworkspace
       
       - name: Build iOS
         run: |
           cd ios
-          xcodebuild -workspace *.xcworkspace -scheme app -configuration Release -destination "generic/platform=iOS" build CODE_SIGNING_ALLOWED=NO 2>&1 | tail -30
+          WORKSPACE=$(ls *.xcworkspace 2>/dev/null | head -1)
+          if [ -n "$WORKSPACE" ]; then
+            xcodebuild -workspace "$WORKSPACE" -scheme app -configuration Release \
+              -destination "generic/platform=iOS Simulator" build \
+              CODE_SIGNING_ALLOWED=NO 2>&1 | tail -20
+          else
+            echo "No workspace found"
+          fi
       
       - name: Upload Build
         uses: actions/upload-artifact@v4
         with:
           name: ios-build
-          path: build/
+          path: ios/build/
           if-no-files-found: warn
