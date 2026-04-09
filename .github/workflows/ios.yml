@@ -22,10 +22,15 @@ jobs:
       - name: Generate iOS native project
         run: npx expo prebuild --platform ios --clean
       
-      - name: Install CocoaPods
+      - name: Install CocoaPods (with retry)
         run: |
           cd ios
-          pod install
+          for i in 1 2 3; do
+            echo "Attempt $i to install pods..."
+            pod install && break
+            echo "Retrying in 10 seconds..."
+            sleep 10
+          done
       
       - name: Build iOS
         run: |
