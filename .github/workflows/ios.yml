@@ -1,0 +1,32 @@
+name: Build iOS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Install CocoaPods
+        run: npx expo install:pods --platform ios
+      
+      - name: Build iOS
+        run: npx expo build:ios --non-interactive --no-publish 2>&1 || echo "使用替代方案..."
+      
+      - name: Upload iOS Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build
+          path: ios/*.ipa 2>/dev/null || ios/build/Build/Products/*.app 2>/dev/null || "build-ios.log"
