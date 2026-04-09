@@ -23,18 +23,18 @@ jobs:
         run: npx expo prebuild --platform ios --clean
       
       - name: Install CocoaPods
-        run: cd ios && pod install && cd ..
-      
-      - name: Build iOS
-        env:
-          EXPO_NO_DOCTOR: 1
         run: |
           cd ios
-          xcodebuild -workspace *.xcworkspace -scheme app -configuration Release -archivePath build/Archive.xcarchive -exportArchive -exportOptionsPlist ../ExportOptions.plist 2>&1 | tail -20
-        continue-on-error: true
+          pod install
       
-      - name: Create placeholder
+      - name: Build iOS
         run: |
-          echo "MoodBloom iOS Build - Expo Prebuild Generated"
-          echo "Download URL: https://expo.dev/artifacts/eas/${GITHUB_RUN_ID}"
-          ls -la ios/ 2>/dev/null || echo "ios folder created by expo prebuild"
+          cd ios
+          xcodebuild -workspace *.xcworkspace -scheme app -configuration Release -destination "generic/platform=iOS" build CODE_SIGNING_ALLOWED=NO 2>&1 | tail -30
+      
+      - name: Upload Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build
+          path: build/
+          if-no-files-found: warn

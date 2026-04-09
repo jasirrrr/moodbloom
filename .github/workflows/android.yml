@@ -25,11 +25,20 @@ jobs:
           distribution: 'temurin'
           java-version: 17
       
-      - name: Build Android
-        run: npx expo build:android --non-interactive --no-publish 2>&1 || echo "使用替代方案..."
+      - name: Generate Android native project
+        run: npx expo prebuild --platform android --clean
+      
+      - name: Build APK
+        env:
+          CI: 1
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug 2>&1 | tail -30
       
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: android/app/build/outputs/apk/**/*.apk 2>/dev/null || "build-android.log"
+          path: android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
