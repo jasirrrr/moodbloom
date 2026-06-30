@@ -2,7 +2,7 @@
   "expo": {
     "name": "暖暖",
     "slug": "nuannuan-mood",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -16,7 +16,7 @@
     ],
     "ios": {
       "bundleIdentifier": "com.nuannuan.moodapp",
-      "buildNumber": "17",
+      "buildNumber": "18",
       "supportsTablet": false,
       "requireFullScreen": true,
       "privacyManifests": {
