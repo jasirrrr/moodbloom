@@ -5,7 +5,7 @@ import * as Clipboard from 'expo-clipboard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
-import { Audio } from 'expo-av';
+import { useAudioRecorder, useAudioPlayer, RecordingPresets, requestRecordingPermissionsAsync } from 'expo-audio'; // 从 expo-av 迁移到 expo-audio
 import { API_BASE } from './config';
 
 const MOOD_ICONS = {
@@ -76,9 +76,10 @@ export default function App() {
   const [mediaFiles, setMediaFiles] = useState([]); // { uri, type: 'image' | 'video' | 'audio', uploadedUrl? }
   const [uploading, setUploading] = useState(false);
   const [useFrontCamera, setUseFrontCamera] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [recording, setRecording] = useState(null);
-  const [playingAudio, setPlayingAudio] = useState(null); // 详情页播放用的 sound 对象
+  // expo-audio hooks（替代原有的 isRecording/recording/playingAudio state）
+  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const audioPlayer = useAudioPlayer('');
+
   
   // Auth state
   const [loginAccount, setLoginAccount] = useState('');
@@ -436,62 +437,43 @@ export default function App() {
     setMediaFiles(prev => prev.filter((_, i) => i !== index));
   }
 
+  // 【expo-audio 迁移】使用 useAudioRecorder hook 替代 Audio.Recording
   async function startVoiceRecording() {
     try {
-      const { status } = await Audio.requestPermissionsAsync();
-      if (status !== 'granted') {
+      const { granted } = await requestRecordingPermissionsAsync();
+      if (!granted) {
         Alert.alert('需要权限', '请在设置中允许访问麦克风');
         return;
       }
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: true,
-      });
-      const { recording: newRecording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
-      );
-      setRecording(newRecording);
-      setIsRecording(true);
+      await recorder.prepareToRecordAsync();
+      recorder.record();
     } catch (e) {
       Alert.alert('录音失败', '无法开始录音，请稍后再试');
     }
   }
 
+  // 【expo-audio 迁移】使用 recorder.stop() 和 recorder.uri 替代 recording.stopAndUnloadAsync()
   async function stopVoiceRecording() {
     try {
-      if (!recording) return;
-      await recording.stopAndUnloadAsync();
-      const uri = recording.getURI();
-      setRecording(null);
-      setIsRecording(false);
+      await recorder.stop();
+      const uri = recorder.uri;
       if (uri) {
         setMediaFiles(prev => [...prev, { uri, type: 'audio' }].slice(0, 9));
       }
     } catch (e) {
-      setIsRecording(false);
-      setRecording(null);
       Alert.alert('录音出错', '保存录音失败');
     }
   }
 
-  async function playAudio(uri) {
+  // 【expo-audio 迁移】使用 useAudioPlayer hook 替代 Audio.Sound.createAsync
+  function playAudio(uri) {
     try {
-      if (playingAudio) {
-        await playingAudio.stopAsync();
-        await playingAudio.unloadAsync();
-        setPlayingAudio(null);
+      if (audioPlayer.playing) {
+        audioPlayer.pause();
         return;
       }
-      const { sound } = await Audio.Sound.createAsync({ uri });
-      setPlayingAudio(sound);
-      await sound.playAsync();
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.didJustFinish) {
-          sound.unloadAsync();
-          setPlayingAudio(null);
-        }
-      });
+      audioPlayer.replace(uri);
+      audioPlayer.play();
     } catch (e) {
       Alert.alert('播放失败', '无法播放语音记录');
     }
@@ -1059,11 +1041,11 @@ export default function App() {
                 <Text style={[styles.mediaBtnText, useFrontCamera && styles.mediaBtnActiveText]}>{useFrontCamera ? '🤳 前置' : '📷 后置'}</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.mediaBtn, isRecording && styles.mediaBtnRecording]}
-                onPress={isRecording ? stopVoiceRecording : startVoiceRecording}
+                style={[styles.mediaBtn, recorder.isRecording && styles.mediaBtnRecording]}
+                onPress={recorder.isRecording ? stopVoiceRecording : startVoiceRecording}
               >
-                <Text style={[styles.mediaBtnText, isRecording && styles.mediaBtnActiveText]}>
-                  {isRecording ? '⏹ 停止' : '🎙️ 语音'}
+                <Text style={[styles.mediaBtnText, recorder.isRecording && styles.mediaBtnActiveText]}>
+                  {recorder.isRecording ? '⏹ 停止' : '🎙️ 语音'}
                 </Text>
               </TouchableOpacity>
               <Text style={styles.mediaCount}>{mediaFiles.length}/9</Text>
@@ -1240,7 +1222,7 @@ export default function App() {
                       style={[styles.audioPlayCard, { backgroundColor: themeColors.card }]}
                       onPress={() => playAudio(mediaUri)}
                     >
-                      <Text style={styles.audioPlayIcon}>{playingAudio ? '⏸' : '▶️'}</Text>
+                      <Text style={styles.audioPlayIcon}>{audioPlayer.playing ? '⏸' : '▶️'}</Text>
                       <Text style={[styles.audioPlayText, { color: themeColors.text }]}>语音记录</Text>
                     </TouchableOpacity>
                   ) : med.type === 'image' ? (
