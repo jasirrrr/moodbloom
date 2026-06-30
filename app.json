@@ -1,43 +1,81 @@
 {
   "expo": {
-    "name": "MoodBloom",
-    "slug": "moodbloom",
-    "version": "1.0.0",
+    "name": "暖暖",
+    "slug": "nuannuan-mood",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#E8A0BF"
+      "backgroundColor": "#FFF0F5"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.moodbloom.app",
+      "bundleIdentifier": "com.nuannuan.moodapp",
+      "buildNumber": "17",
+      "supportsTablet": false,
+      "requireFullScreen": true,
+      "privacyManifests": {
+        "NSPrivacyAccessedAPICategoryFileTimestamp": false,
+        "NSPrivacyAccessedAPICategoryDiskSpace": false,
+        "NSPrivacyAccessedAPICategorySystemBootTime": false,
+        "NSPrivacyAccessedAPICategoryActiveKeyboards": false,
+        "NSPrivacyAccessedAPICategoryUserDefaults": false
+      },
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "MoodBloom需要获取位置以发现附近的人"
+        "NSCameraUsageDescription": "暖暖需要使用相机，方便你为心情记录拍一张照片",
+        "NSPhotoLibraryUsageDescription": "暖暖需要访问相册，方便你为心情记录添加图片",
+        "NSPhotoLibraryAddUsageDescription": "暖暖需要保存图片到你的相册",
+        "NSLocationWhenInUseUsageDescription": "暖暖需要获取你的位置，以便结合天气给你更贴心的建议",
+        "NSMicrophoneUsageDescription": "暖暖需要使用麦克风，方便你录制语音心情记录",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
+      "package": "com.nuannuan.moodapp",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#E8A0BF"
+        "backgroundColor": "#FFF0F5"
       },
-      "package": "com.moodbloom.app",
       "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
+        "android.permission.CAMERA",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
       ]
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "暖暖需要访问相册，为你的心情记录添加图片",
+          "cameraPermission": "暖暖需要使用相机，拍一张照片记录此刻心情"
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "暖暖需要使用麦克风，方便你录制语音心情记录"
+        }
+      ]
+    ],
     "extra": {
-      "apiUrl": "http://192.168.1.10:3000/api"
+      "eas": {
+        "projectId": "0c9f1bbf-e596-4862-b200-24744e08142b"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/0c9f1bbf-e596-4862-b200-24744e08142b"
     }
   }
 }
